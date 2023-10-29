@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./d3.js"></script>
+    <script src="./d3jstopojson.v1.js"></script>
+    <title>MASS MAP</title>
+    <style>
+        #tt1, #tt2, #tt3
+        {
+            position: fixed;
+            opacity: 2;
+            width: auto;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: medium;
+            border-radius: 1px;
+            line-height: 2;
+          
+    } 
+        path {
+            stroke-width: .5px;
+            stroke: rgb(70, 39, 39)
+        }      
+        path:hover {
+            opacity: .6;
+            stroke: rgb(249, 18, 18);
+            stroke-width: 4px;
+        }
+        .container{
+            display: flex;
+            flex-direction: row;
+            align-items: left;
+            justify-content: center;
+        }
+        #Assing, #Assing2{
+            text-align: center;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h2 id="Assing">MAJOR ASSIGNMENT_2</h2>
+        <h4 id ='Assing2'>Rakshith Bangalore Siddalingaiah</h4>
+    <div class="container">
+        <div id="tt1"></div>
+        <div id="tt2"></div>
+        <div id="tt3"></div>
+        <div class="figure_1"></div>
+        <div class="figure_2"></div>
+        <div class="figure_3"></div>
+    </div>
+    <script>    
+//page dimension
+        const window_dims = {
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+        const svgWidth = window_dims.width/4;
+        const svgHeight = window_dims.width/4;
+        const MASS_counties = "./towns.topojson"
+        Promise.all([
+            d3.json(MASS_counties)
+        ]).then(data =>
+        {
+// topology data
+            const t_data = data[0];
+            const csv_data = data[1];
+
+            const generating_map_1 = (topo_data,containerName,width,height,margin=29.5) =>{
+                const svg = d3.select(containerName).append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+                const geojson = topojson.feature(topo_data, topo_data.objects.ma);
+                const projections = [
+                    d3.geoAzimuthalEqualArea(),
+                    d3.geoAlbersUsa(), 
+                    d3.geoAlbers(),
+                    d3.geoMercator(), 
+                    d3.geoNaturalEarth1(), 
+                    d3.geoEqualEarth(), 
+                    d3.geoConicEqualArea(), 
+                    d3.geoEquirectangular(),
+                    d3.geoOrthographic()
+                ]
+                const geoPath_generator = d3.geoPath()
+                .projection(projections[3].fitSize([width-margin,height-margin], geojson))
+                const colorInterpolator = d3.interpolateRgbBasis(['#FF5733','#2FFD1DC','#3498DB','#F1C40F','#E67E22','#9B59B6'].reverse())
+                const logScale = d3.scaleLog()
+                    .domain(d3.extent(geojson.features,(d) => 
+                    {
+                        return d.properties.POP1980
+                    }))
+                const linearScale = d3.scaleLinear()
+                    .domain(d3.extent(geojson.features, (d) => {
+                        return d.properties.POP1980
+                    }))
+                const tooltip= d3.select("#tt1");
+                svg.selectAll("path")
+                    .data(geojson.features)
+                    .enter()
+                    .append("path")
+                    .attr("d", d => geoPath_generator(d))
+                    .attr("fill", d => colorInterpolator(logScale(d['properties']['POP1980'])))
+                    .on("mouseenter", (m, d) => {
+                        tooltip.transition()
+                            .duration(190)
+                            .style("opacity",0)
+                        tooltip.html(`${d['properties']['TOWN']} <br> ${d['properties']['POP1980']}`)
+                            .style("left", m.clientX + "px")
+                            .style("top", m.clientY + "px");
+                    })
+                    .on("mousemove", (m, d) => {
+                        tooltip.style("opacity", .8)
+                    })
+                    .on("mouseout", (m, d) => {
+                        tooltip.transition()
+                            .duration(390)
+                            .style("opacity", 1)
+                    })
+            }
+            const generating_map_2= (topo_data,containerName,width,height,margin=29.5) =>{
+                const svg = d3.select(containerName).append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+                const geojson = topojson.feature(topo_data, topo_data.objects.ma);
+                const projections = [
+                    d3.geoAzimuthalEqualArea(), 
+                    d3.geoAlbersUsa(), 
+                    d3.geoAlbers(), 
+                    d3.geoMercator(), 
+                    d3.geoNaturalEarth1(),
+                    d3.geoEqualEarth(), 
+                    d3.geoConicEqualArea(),
+                    d3.geoEquirectangular(), 
+                    d3.geoOrthographic()
+                ]
+                const geoPath_generator = d3.geoPath()
+                .projection(projections[3].fitSize([width-margin,height-margin], geojson))
+                const colorInterpolator = d3.interpolateRgbBasis(['#FF5733','#2FFD1DC','#3498DB','#F1C40F','#E67E22','#9B59B6'].reverse())
+                const logScale = d3.scaleLog()
+                    .domain(d3.extent(geojson.features,(d) => {
+                        return d.properties.POPCH00_10;
+                    }))
+                const linearScale = d3.scaleLinear()
+                    .domain(d3.extent(geojson.features,(d) => {
+                        return d.properties.POPCH00_10;
+                    }))
+                const tooltip = d3.select("#tt2");
+                svg.selectAll("path")
+                    .data(geojson.features)
+                    .enter()
+                    .append("path")
+                    .attr("d", d => geoPath_generator(d))
+                    .attr("fill", d => colorInterpolator(linearScale(d['properties']['POPCH00_10'])))
+                    .on("mouseenter", (m, d) => {
+                        tooltip.transition()
+                            .duration(190)
+                            .style("opacity",0.8)
+                        tooltip.html(`${d['properties']['TOWN']} <br> ${d['properties']['POPCH00_10']}`)
+                            .style("left", m.clientX + "px")
+                            .style("top", m.clientY + "px");
+                    })
+                    .on("mousemove", (m, d)=> {
+                        tooltip.style("opacity",.8)
+                    })
+                    .on("mouseout",(m, d) =>{
+                        tooltip.transition()
+                            .duration(390)
+                            .style("opacity",1)
+                    })
+            }
+            const generating_map_3 =(topo_data,containerName,width,height,margin=30)=>{
+                const svg= d3.select(containerName).append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+                const geojson= topojson.feature(topo_data, topo_data.objects.ma);
+                const projections =[
+                    d3.geoAzimuthalEqualArea(),
+                    d3.geoAlbersUsa(), 
+                    d3.geoAlbers(), 
+                    d3.geoMercator(), 
+                    d3.geoNaturalEarth1(), 
+                    d3.geoEqualEarth(), 
+                    d3.geoConicEqualArea(),
+                    d3.geoEquirectangular(), 
+                    d3.geoOrthographic()
+                ]
+                const geoPath_generator= d3.geoPath()
+                .projection(projections[3].fitSize([width-margin,height-margin], geojson))
+                const colorInterpolator= d3.interpolateRgbBasis(['#FF5733','#2FFD1DC','#3498DB','#F1C40F','#E67E22','#9B59B6'].reverse())
+                const logScale =d3.scaleLog()
+                    .domain(d3.extent(geojson.features,(d) => {
+                        return d['properties']["FIPS_STCO"]
+                    }))
+                const linearScale = d3.scaleLinear()
+                    .domain(d3.extent(geojson.features,(d) => {
+                        return d['properties']["FIPS_STCO"]
+                    }))
+                const tooltip =d3.select("#tt3");
+                svg.selectAll("path")
+                    .data(geojson.features)
+                    .enter()
+                    .append("path")
+                    .attr("d", d => geoPath_generator(d))
+                    .attr("fill", d => colorInterpolator(linearScale(d['properties']["FIPS_STCO"])))
+                    .on("mouseenter", (m, d) => {
+                        tooltip.transition()
+                            .duration(190)
+                            .style("opacity",.8)
+                        tooltip.html(`${d['properties']['TOWN']} <br> ${d['properties']["FIPS_STCO"]}`)
+                            .style("left", m.clientX + "px")
+                            .style("top", m.clientY + "px");
+                    })
+                    .on("mousemove",(m, d) => {
+                        tooltip.style("opacity", .8)
+                    })
+                    .on("mouseout",(m, d) => {
+                        tooltip.transition()
+                            .duration(390)
+                            .style("opacity", 1)
+                    })
+            }
+            generating_map_1(t_data,".figure_1",svgWidth,svgHeight)
+            generating_map_2(t_data,".figure_2",svgWidth,svgHeight)
+            generating_map_3(t_data,".figure_3",svgWidth,svgHeight)
+        })
+    </script>
+</body>
+</html>
